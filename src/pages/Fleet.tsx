@@ -1,36 +1,30 @@
 import { useState } from 'react';
-import { Image } from '../components/Image';
 import { vehicles } from '../data/vehicles';
-import { useStore } from '../store/useStore';
-import { Vehicle } from '@/types';
-import { toast } from 'react-toastify';
+import { Vehicle, Category } from '@/types';
+import { Button } from '@/components/ui/button';
 
 export default function Fleet() {
-  const { setSelectedVehicle } = useStore();
-  const [, setBookingModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | 'ALL'>('ALL');
+
+  const filteredVehicles = selectedCategory === 'ALL' 
+    ? vehicles 
+    : vehicles.filter(vehicle => vehicle.category === selectedCategory);
 
   const handleBookNow = (vehicle: Vehicle) => {
-    try {
-      setSelectedVehicle(vehicle);
-      setBookingModal(true);
-      toast({
-        title: "Vehicle Selected",
-        description: `You've selected the ${vehicle.name}. Please complete your booking details.`,
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "There was a problem selecting this vehicle. Please try again.",
-      });
-    }
+    const message = encodeURIComponent(
+      `Hello, I'm interested in booking the ${vehicle.name}.\n` +
+      `Price: ${vehicle.price}\n` +
+      `Please provide me with availability and booking details.`
+    );
+    window.open(`https://wa.me/27733366385?text=${message}`, '_blank');
   };
 
-  const createWhatsAppLink = (car: Vehicle) => {
+  const handleMoreInfo = (vehicle: Vehicle) => {
     const message = encodeURIComponent(
-      `Hello, I would like to inquire about the ${car.name}. Please provide more information.`
+      `Hello, I would like to know more about the ${vehicle.name}.\n` +
+      `Could you please provide additional information?`
     );
-    return `https://wa.me/27733366385?text=${message}`;
+    window.open(`https://wa.me/27733366385?text=${message}`, '_blank');
   };
 
   return (
@@ -42,42 +36,74 @@ export default function Fleet() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {vehicles.map((car) => (
-          <div key={car.id} className="group bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="relative aspect-[16/9] overflow-hidden">
-              <Image
-                src={car.image}
-                alt={car.name}
-                className="object-cover transition-transform group-hover:scale-105"
+      {/* Category Filter */}
+      <div className="flex gap-4 mb-8 justify-center">
+        <Button 
+          variant={selectedCategory === 'ALL' ? "default" : "outline"}
+          onClick={() => setSelectedCategory('ALL')}
+        >
+          All
+        </Button>
+        {Object.values(Category).map(category => (
+          <Button
+            key={category}
+            variant={selectedCategory === category ? "default" : "outline"}
+            onClick={() => setSelectedCategory(category)}
+          >
+            {category}
+          </Button>
+        ))}
+      </div>
+
+      {/* Vehicle Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {filteredVehicles.map((vehicle) => (
+          <div key={vehicle.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div className="relative aspect-video">
+              <img
+                src={vehicle.image}
+                alt={vehicle.name}
+                className="object-cover w-full h-full transition-transform hover:scale-105"
               />
             </div>
             <div className="p-6 space-y-4">
-              <h3 className="text-xl font-semibold">{car.name}</h3>
-              <p className="text-sm font-semibold text-primary">{car.price}</p>
-              <ul className="text-sm space-y-2">
-                {car.specs.map((spec, index) => (
-                  <li key={index} className="text-muted-foreground">• {spec}</li>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="text-xl font-semibold">{vehicle.name}</h3>
+                  <p className="text-sm font-medium text-primary">{vehicle.price}</p>
+                </div>
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                  vehicle.available 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {vehicle.available ? 'Available' : 'Unavailable'}
+                </span>
+              </div>
+              
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {vehicle.specs.map((spec, index) => (
+                  <li key={index}>• {spec}</li>
                 ))}
               </ul>
-              <div className="flex gap-3 mt-4">
-                <button 
-                  className="flex-1 px-4 py-2 bg-primary text-white rounded"
-                  onClick={() => handleBookNow(car)}
-                  disabled={!car.available}
-                >
-                  {car.available ? 'Book Now' : 'Currently Unavailable'}
-                </button>
-                <a
-                  href={createWhatsAppLink(car)}
-                  target="_blank"
-                  rel="noopener noreferrer"
+              
+              <p className="text-sm text-muted-foreground">{vehicle.description}</p>
+              
+              <div className="flex gap-4">
+                <Button 
                   className="flex-1"
+                  onClick={() => handleBookNow(vehicle)}
+                  disabled={!vehicle.available}
                 >
-                  <button className="w-full px-4 py-2 border border-primary text-primary rounded">
-                    More Info
-                  </button>
-                </a>
+                  Book via WhatsApp
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => handleMoreInfo(vehicle)}
+                >
+                  More Info
+                </Button>
               </div>
             </div>
           </div>

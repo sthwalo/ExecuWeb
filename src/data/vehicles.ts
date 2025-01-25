@@ -5,7 +5,7 @@ export const vehicles: Vehicle[] = [
     id: "maybach-001",
     name: "Mercedes Maybach",
     image: "/images/fleet/may.avif",
-    price: "R10,000/half-day | R3,000/hr",
+    price: "R8,000/half-day | R2,500/hr",
     specs: ["Luxury Sedan", "V12 Engine", "7-Speed Auto", "4 Seats", "621 HP"],
     available: true,
     category: Category.LUXURY,
